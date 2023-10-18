@@ -4,6 +4,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import project.carsharing.model.Car;
+import project.carsharing.validation.annotation.EnumValueCheck;
 
 @Data
 public class CarRequestDto {
@@ -11,7 +13,7 @@ public class CarRequestDto {
     private String model;
     @NotNull
     private String brand;
-    @NotNull
+    @EnumValueCheck(Car.Type.class)
     private String type;
     @NotNull
     @Min(value = 1)

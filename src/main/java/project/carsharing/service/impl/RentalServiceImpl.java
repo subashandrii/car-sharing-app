@@ -16,6 +16,7 @@ import project.carsharing.model.Rental;
 import project.carsharing.repository.CarRepository;
 import project.carsharing.repository.RentalRepository;
 import project.carsharing.repository.UserRepository;
+import project.carsharing.service.NotificationService;
 import project.carsharing.service.RentalService;
 
 @Service
@@ -25,6 +26,7 @@ public class RentalServiceImpl implements RentalService {
     private final CarRepository carRepository;
     private final RentalMapper rentalMapper;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     
     @Override
     public RentalResponseDto findById(String email, Long id) {
@@ -64,7 +66,10 @@ public class RentalServiceImpl implements RentalService {
         Rental rental = rentalMapper.toModel(requestDto)
                                 .setCar(savedCar)
                                 .setUser(userRepository.getUserByEmail(email));
-        return rentalMapper.toCreateDto(rentalRepository.save(rental));
+        RentalCreateResponseDto responseDto =
+                rentalMapper.toCreateDto(rentalRepository.save(rental));
+        notificationService.sendMessageAboutNewRental(responseDto);
+        return responseDto;
     }
     
     @Override

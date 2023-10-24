@@ -1,5 +1,7 @@
 package project.carsharing.mapper;
 
+import static project.carsharing.util.PatternUtil.formatDoubleValue;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import org.mapstruct.AfterMapping;
@@ -12,7 +14,7 @@ import project.carsharing.dto.rental.RentalRequestDto;
 import project.carsharing.dto.rental.RentalResponseDto;
 import project.carsharing.model.Rental;
 
-@Mapper(config = MapperConfig.class, uses = CarMapper.class)
+@Mapper(config = MapperConfig.class, uses = {CarMapper.class, UserMapper.class})
 public interface RentalMapper {
     @Mapping(source = "carId", target = "car.id")
     Rental toModel(RentalRequestDto responseDto);
@@ -25,20 +27,22 @@ public interface RentalMapper {
     default void setTotalAmount(@MappingTarget RentalCreateResponseDto responseDto,
                                 Rental rental) {
         long rentalDays = rental.getRentalDate().until(rental.getReturnDate(), ChronoUnit.DAYS) + 1;
-        responseDto.setTotalAmount(rentalDays * rental.getCar().getDailyFee().doubleValue());
+        double totalAmount = rentalDays * rental.getCar().getDailyFee().doubleValue();
+        responseDto.setTotalAmount(formatDoubleValue(totalAmount));
     }
     
     @AfterMapping
     default void setPaidAndLeftToPay(@MappingTarget RentalResponseDto responseDto,
                                 Rental rental) {
         long rentalDays = rental.getRentalDate().until(rental.getReturnDate(), ChronoUnit.DAYS) + 1;
-        responseDto.setPaid(rentalDays * rental.getCar().getDailyFee().doubleValue());
+        double paid = rentalDays * rental.getCar().getDailyFee().doubleValue();
+        responseDto.setPaid(formatDoubleValue(paid));
         if (rental.getActualReturnDate() != null
                     && rental.getReturnDate().isBefore(LocalDate.now())) {
             long actualRentalDays =
                     rental.getReturnDate().until(rental.getActualReturnDate(), ChronoUnit.DAYS);
-            responseDto.setLeftToPay(actualRentalDays
-                                             * rental.getCar().getDailyFee().doubleValue());
+            double leftToPay = actualRentalDays * rental.getCar().getDailyFee().doubleValue();
+            responseDto.setLeftToPay(formatDoubleValue(leftToPay));
         }
     }
 }

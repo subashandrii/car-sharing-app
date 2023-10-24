@@ -43,6 +43,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role = Role.CUSTOMER;
+    @Column(name = "telegram_chat_id")
+    private Long telegramChatId;
     @Column(nullable = false, name = "is_deleted")
     private boolean isDeleted = false;
     

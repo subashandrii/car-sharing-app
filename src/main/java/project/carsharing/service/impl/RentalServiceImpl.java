@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import project.carsharing.repository.UserRepository;
 import project.carsharing.service.NotificationService;
 import project.carsharing.service.RentalService;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class RentalServiceImpl implements RentalService {
@@ -56,7 +58,8 @@ public class RentalServiceImpl implements RentalService {
     
     @Override
     @Transactional
-    public RentalCreateResponseDto create(String email, RentalRequestDto requestDto) {
+    public RentalCreateResponseDto create(RentalRequestDto requestDto,
+                                          String email) {
         Car car = carRepository.getReferenceById(requestDto.getCarId());
         if (car.getInventory() <= 0) {
             throw new RuntimeException("There are no available cars, please choose another car");
@@ -68,13 +71,15 @@ public class RentalServiceImpl implements RentalService {
                                 .setUser(userRepository.getUserByEmail(email));
         RentalCreateResponseDto responseDto =
                 rentalMapper.toCreateDto(rentalRepository.save(rental));
+        log.debug("User with email {} created a new rental {}",
+                email, rental.toString());
         notificationService.sendMessageAboutNewRental(responseDto);
         return responseDto;
     }
     
     @Override
     @Transactional
-    public RentalResponseDto returnCarAfterRental(Long id) {
+    public RentalResponseDto returnCarAfterRental(Long id, String email) {
         Rental rental = getRentalById(id);
         if (rental.getActualReturnDate() != null) {
             throw new RuntimeException("This car is returned");
@@ -83,6 +88,8 @@ public class RentalServiceImpl implements RentalService {
         car.setInventory(car.getInventory() + 1);
         rental.setCar(car)
                 .setActualReturnDate(LocalDate.now());
+        log.debug("Manager with email {} processed the return of the car after the rental {}",
+                email, rental.toString());
         return rentalMapper.toDto(rentalRepository.save(rental));
     }
     

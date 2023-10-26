@@ -14,7 +14,7 @@ public interface RentalService {
     List<RentalResponseDto> findAllIfTheyAreActive(Long userId, boolean isActive,
                                                    Pageable pageable);
     
-    RentalCreateResponseDto create(String email, RentalRequestDto requestDto);
+    RentalCreateResponseDto create(RentalRequestDto requestDto, String email);
     
-    RentalResponseDto returnCarAfterRental(Long id);
+    RentalResponseDto returnCarAfterRental(Long id, String email);
 }

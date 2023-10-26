@@ -6,5 +6,5 @@ import project.carsharing.dto.user.UserResponseDto;
 public interface UserService {
     UserResponseDto getUserByEmail(String email);
     
-    UserResponseDto updateUsersRole(Long id, RoleRequestDto requestDto);
+    UserResponseDto updateUsersRole(Long id, RoleRequestDto requestDto, String email);
 }

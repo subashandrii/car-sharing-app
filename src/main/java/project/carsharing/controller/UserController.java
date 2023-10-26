@@ -38,8 +38,9 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     public UserResponseDto updateUsersRole(
             @PathVariable Long id,
-            @RequestBody @Valid RoleRequestDto requestDto) {
-        return userService.updateUsersRole(id, requestDto);
+            @RequestBody @Valid RoleRequestDto requestDto,
+            Authentication authentication) {
+        return userService.updateUsersRole(id, requestDto, authentication.getName());
     }
     
     @PutMapping("/me")

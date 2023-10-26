@@ -1,6 +1,7 @@
 package project.carsharing;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,6 +14,7 @@ import project.carsharing.service.api.TelegramBotApi;
 @SpringBootApplication
 @RequiredArgsConstructor
 @EnableScheduling
+@Log4j2
 public class CarSharingApplication {
     private final TelegramBotApi telegramBotApi;
     
@@ -25,6 +27,7 @@ public class CarSharingApplication {
         return args -> {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(telegramBotApi);
+            log.info("Telegram bot is started");
         };
     }
 }

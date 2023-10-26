@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,23 +45,25 @@ public class CarController {
     @Operation(summary = "Create a new car")
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
-    public CarResponseDto createCar(@RequestBody @Valid CarRequestDto requestDto) {
-        return carService.create(requestDto);
+    public CarResponseDto createCar(@RequestBody @Valid CarRequestDto requestDto,
+                                    Authentication authentication) {
+        return carService.create(requestDto, authentication.getName());
     }
     
     @PutMapping("/{id}")
     @Operation(summary = "Update car information")
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     public CarResponseDto updateCar(@PathVariable Long id,
-                                    @RequestBody @Valid CarRequestDto requestDto) {
-        return carService.update(id, requestDto);
+                                    @RequestBody @Valid CarRequestDto requestDto,
+                                    Authentication authentication) {
+        return carService.update(id, requestDto, authentication.getName());
     }
     
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a car")
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCar(@PathVariable Long id) {
-        carService.delete(id);
+    public void deleteCar(@PathVariable Long id,Authentication authentication) {
+        carService.delete(id, authentication.getName());
     }
 }

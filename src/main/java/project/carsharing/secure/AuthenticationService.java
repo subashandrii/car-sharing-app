@@ -2,6 +2,7 @@ package project.carsharing.secure;
 
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +23,7 @@ import project.carsharing.repository.UserRepository;
 
 @RequiredArgsConstructor
 @Component
+@Log4j2
 public class AuthenticationService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -41,14 +43,18 @@ public class AuthenticationService {
         if (isItManager) {
             user.setRole(User.Role.MANAGER);
         }
-        return userMapper.toDto(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        log.debug("Registered new user {}", savedUser.toString());
+        return userMapper.toDto(savedUser);
     }
     
+    @Transactional
     public UserLoginResponseDto login(UserLoginRequestDto requestDto) {
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requestDto.getEmail(),
                         requestDto.getPassword()));
         String token = jwtUtil.generateToken(authentication.getName());
+        log.debug("User with email {} logged in", authentication.getName());
         return new UserLoginResponseDto(token);
     }
     
@@ -65,6 +71,8 @@ public class AuthenticationService {
         if (!savedUser.getEmail().equals(email)) {
             token = updateAuthentication(savedUser);
         }
+        log.debug("User with email {} updated {}profile info {}", email,
+                requestDto.getNewPassword() != null ? " password and " : "", savedUser.toString());
         return userMapper.toUpdateDto(savedUser).setToken(token);
     }
     

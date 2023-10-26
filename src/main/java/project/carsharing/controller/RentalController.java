@@ -58,14 +58,15 @@ public class RentalController {
     @ResponseStatus(HttpStatus.CREATED)
     public RentalCreateResponseDto createRental(@RequestBody @Valid RentalRequestDto requestDto,
                                                 Authentication authentication) {
-        return rentalService.create(authentication.getName(), requestDto);
+        return rentalService.create(requestDto, authentication.getName());
     }
     
     @PostMapping("/{id}/return")
     @Operation(summary = "Return car after rental and set actual return date")
     @PreAuthorize("hasRole('ROLE_MANAGER')")
-    public RentalResponseDto returnCarAfterRental(@PathVariable Long id) {
-        return rentalService.returnCarAfterRental(id);
+    public RentalResponseDto returnCarAfterRental(@PathVariable Long id,
+                                                  Authentication authentication) {
+        return rentalService.returnCarAfterRental(id, authentication.getName());
     }
 }
 

@@ -2,6 +2,7 @@ package project.carsharing.service.api;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import project.carsharing.model.User;
 import project.carsharing.repository.UserRepository;
 import project.carsharing.util.PatternUtil;
 
+@Log4j2
 @Component
 public class TelegramBotApi extends TelegramLongPollingBot {
     @Value("${telegram.bot.name}")
@@ -34,7 +36,7 @@ public class TelegramBotApi extends TelegramLongPollingBot {
     
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().getText().equals("/start")) {
+        if (update.hasMessage()) {
             String text = update.getMessage().getText();
             if (text.equals("/start")) {
                 hasStarted = sendStartMessage(update);
@@ -66,13 +68,15 @@ public class TelegramBotApi extends TelegramLongPollingBot {
                         : user.get().getTelegramChatId() != null
                                   ? "A user with such an email receives "
                                             + "a notification on another profile"
-                                  : saveChatId(user.get(), update.getMessage().getChatId());
+                                  : saveChatId(user.get(), update.getMessage().getChatId(), email);
         sendMessage(update.getMessage().getChatId(), text);
         return !text.startsWith("Hello");
     }
     
-    private String saveChatId(User user, Long chatId) {
+    private String saveChatId(User user, Long chatId, String email) {
         userRepository.save(user.setTelegramChatId(chatId));
+        log.info("User with email {} will now be able "
+                          + "to receive notifications from the Telegram bot", email);
         return "Hello, " + user.getFirstName() + "! You are already receiving "
                        + "notifications from this bot!";
     }
@@ -85,7 +89,7 @@ public class TelegramBotApi extends TelegramLongPollingBot {
         try {
             execute(message);
         } catch (TelegramApiException e) {
-            e.getMessage();
+            log.warn(e.getMessage() + " Chat id is {}", chatId);
         }
     }
 }

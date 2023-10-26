@@ -9,9 +9,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import project.carsharing.dto.rental.RentalCreateResponseDto;
 import project.carsharing.dto.rental.RentalResponseDto;
 import project.carsharing.mapper.RentalMapper;
@@ -22,6 +23,7 @@ import project.carsharing.service.api.TelegramBotApi;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class TelegramNotificationService implements NotificationService {
     private final TelegramBotApi telegramBotApi;
     private final UserRepository userRepository;
@@ -29,13 +31,17 @@ public class TelegramNotificationService implements NotificationService {
     private final RentalMapper rentalMapper;
     
     @Override
+    @Transactional
     public void sendMessageAboutNewRental(RentalCreateResponseDto rentalDto) {
         String message = createMessageAboutNewRental(rentalDto);
         sendMessageToAllManagers(message);
+        log.debug("All managers have been notified by telegram bot"
+                          + " about creation of a new rental with id {}", rentalDto.getId());
     }
     
     @Override
     @Scheduled(cron = "0 0 11 * * ?")
+    @Transactional
     public void checkOverdueRentalsAndSendMessage() {
         List<RentalResponseDto> rentals =
                 rentalRepository.findAllByReturnDateBefore(LocalDate.now()).stream()
@@ -45,6 +51,8 @@ public class TelegramNotificationService implements NotificationService {
                               ? "Hello! No rentals overdue today!"
                               : createMessageAboutOverdueRentals(rentals);
         sendMessageToAllManagers(message);
+        log.debug("All managers have been notified by telegram bot"
+                          + " about {} overdue rentals", rentals.size());
     }
     
     private String createMessageAboutNewRental(RentalCreateResponseDto rentalDto) {

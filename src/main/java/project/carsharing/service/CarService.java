@@ -10,9 +10,9 @@ public interface CarService {
     
     List<CarResponseDto> findAll(Pageable pageable);
     
-    CarResponseDto create(CarRequestDto requestDto);
+    CarResponseDto create(CarRequestDto requestDto, String email);
     
-    CarResponseDto update(Long id, CarRequestDto requestDto);
+    CarResponseDto update(Long id, CarRequestDto requestDto, String email);
     
-    void delete(Long id);
+    void delete(Long id, String email);
 }

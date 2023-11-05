@@ -43,7 +43,8 @@ public class Payment {
     public enum Status {
         PENDING,
         PAID,
-        PAYMENT_ERROR
+        PAYMENT_ERROR,
+        EXPIRED
     }
     
     public enum Type {

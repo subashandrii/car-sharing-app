@@ -12,6 +12,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.carsharing.dto.payment.PaymentRequestDto;
@@ -106,6 +107,25 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.getPaymentsByRentalUserId(userId, pageable).stream()
                        .map(paymentMapper::toDto)
                        .toList();
+    }
+    
+    @Scheduled(cron = "55 59 23 * * ?")
+    public void setExpiredStatusForPendingRentals() {
+        List<Payment> payments =
+                paymentRepository.findAllByStatus(Payment.Status.PENDING).stream()
+                        .map(payment -> {
+                            payment.setStatus(Payment.Status.EXPIRED);
+                            try {
+                                if (payment.getSessionId() != null) {
+                                    Session.retrieve(payment.getSessionId()).expire();
+                                }
+                                return payment;
+                            } catch (StripeException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .toList();
+        paymentRepository.saveAll(payments);
     }
     
     private double getAmount(Payment.Type paymentType, Rental rental) {

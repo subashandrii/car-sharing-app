@@ -118,7 +118,7 @@ public class RentalServiceImpl implements RentalService {
         return rentalMapper.toDto(savedRental);
     }
     
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 50 23 * * ?")
     public void setCancelledStatusForUnpaidRentals() {
         List<Rental> rentals = rentalRepository.getRentalsByStatus(Rental.Status.CREATED).stream()
                                        .map(this::setCancelledStatus)
@@ -182,6 +182,12 @@ public class RentalServiceImpl implements RentalService {
                     email, rental.getId());
             throw new RentalException("The late rental (ID " + rental.getId()
                                                + ") fine has not been paid");
+        } else if (LocalTime.now().getHour() == 23 && LocalTime.now().getMinute() >= 50) {
+            log.error("Manager with an email {} attempted to process a rental"
+                              + " car return (rental ID {}) after 23:50 ({})",
+                    email, rental.getId(), LocalTime.now());
+            throw new RentalException("It is not possible to return the car after 23:50, "
+                                              + "please try after midnight");
         }
     }
     

@@ -17,10 +17,11 @@ import project.carsharing.util.PatternUtil;
 @Log4j2
 @Component
 public class TelegramBotApi extends TelegramLongPollingBot {
+    private static final String START_MESSAGE = "/start";
+    private final UserRepository userRepository;
+    private boolean hasStarted = false;
     @Value("${telegram.bot.name}")
     private String botName;
-    private boolean hasStarted = false;
-    private final UserRepository userRepository;
     
     @Autowired
     public TelegramBotApi(@Value("${telegram.bot.token}") String botToken,
@@ -38,25 +39,25 @@ public class TelegramBotApi extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             String text = update.getMessage().getText();
-            if (text.equals("/start")) {
-                hasStarted = sendStartMessage(update);
+            if (text.equals(START_MESSAGE)) {
+                sendStartMessage(update);
             } else if (hasStarted) {
-                hasStarted = checkEmailAndSaveChatId(update);
+                checkEmailAndSaveChatId(update);
             }
         }
     }
     
-    private boolean sendStartMessage(Update update) {
+    private void sendStartMessage(Update update) {
         Long chatId = update.getMessage().getChatId();
         Optional<User> user = userRepository.findByTelegramChatId(chatId);
         String text = user.isPresent()
                               ? "You are already receiving notifications from this bot!"
                               : "Please enter your email";
         sendMessage(chatId, text);
-        return user.isEmpty();
+        hasStarted = user.isEmpty();
     }
     
-    private boolean checkEmailAndSaveChatId(Update update) {
+    private void checkEmailAndSaveChatId(Update update) {
         String email = update.getMessage().getText();
         Optional<User> user = userRepository.findByEmail(email);
         String text = !Pattern.compile(PatternUtil.EMAIL_PATTERN).matcher(email).matches()
@@ -70,12 +71,12 @@ public class TelegramBotApi extends TelegramLongPollingBot {
                                             + "a notification on another profile"
                                   : saveChatId(user.get(), update.getMessage().getChatId(), email);
         sendMessage(update.getMessage().getChatId(), text);
-        return !text.startsWith("Hello");
+        hasStarted = !text.startsWith("Hello");
     }
     
     private String saveChatId(User user, Long chatId, String email) {
         userRepository.save(user.setTelegramChatId(chatId));
-        log.info("User with email {} will now be able "
+        log.info("Manager with email {} will now be able "
                           + "to receive notifications from the Telegram bot", email);
         return "Hello, " + user.getFirstName() + "! You are already receiving "
                        + "notifications from this bot!";

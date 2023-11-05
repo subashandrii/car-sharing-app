@@ -34,3 +34,7 @@ services:
       "spring.datasource.password" : "$MYSQL_ROOT_PASSWORD"
       }'
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      BOT_TOKEN : "$BOT_TOKEN"
+      BOT_NAME : "$BOT_NAME"
+      JWT_SECRET : "$JWT_SECRET"
+      STRIPE_KEY : "$STRIPE_KEY"

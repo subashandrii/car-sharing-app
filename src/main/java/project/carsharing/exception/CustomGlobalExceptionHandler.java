@@ -49,8 +49,8 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(errorMessage, HttpStatus.FORBIDDEN);
     }
     
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(RuntimeException ex) {
+    @ExceptionHandler(CustomRuntimeException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(CustomRuntimeException ex) {
         String errorMessage = ex.getMessage();
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
     }

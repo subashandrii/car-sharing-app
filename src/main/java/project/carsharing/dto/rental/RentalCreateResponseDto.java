@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import lombok.Data;
 import project.carsharing.dto.car.CarResponseDto;
 import project.carsharing.dto.user.UserResponseDto;
+import project.carsharing.model.Rental;
 
 @Data
 public class RentalCreateResponseDto {
@@ -12,5 +13,5 @@ public class RentalCreateResponseDto {
     private CarResponseDto car;
     private LocalDate rentalDate;
     private LocalDate returnDate;
-    private Double totalAmount;
+    private Rental.Status status;
 }

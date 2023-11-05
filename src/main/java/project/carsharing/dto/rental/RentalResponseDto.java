@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import project.carsharing.dto.car.CarResponseDto;
 import project.carsharing.dto.user.UserResponseDto;
+import project.carsharing.model.Rental;
 
 @Data
 @Accessors(chain = true)
@@ -15,6 +16,5 @@ public class RentalResponseDto {
     private LocalDate rentalDate;
     private LocalDate returnDate;
     private LocalDate actualReturnDate;
-    private Double paid;
-    private Double leftToPay;
+    private Rental.Status status;
 }

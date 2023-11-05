@@ -1,9 +1,7 @@
 package project.carsharing.service;
 
-import project.carsharing.dto.rental.RentalCreateResponseDto;
+import project.carsharing.model.Payment;
 
 public interface NotificationService {
-    void sendMessageAboutNewRental(RentalCreateResponseDto rentalDto);
-    
-    void checkOverdueRentalsAndSendMessage();
+    void sendMessageAboutNewRental(Long rentalId, Payment payment);
 }

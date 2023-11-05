@@ -2,7 +2,6 @@ package project.carsharing.service.impl;
 
 import static project.carsharing.util.PatternUtil.DATE_FORMAT;
 import static project.carsharing.util.PatternUtil.DATE_TIME_FORMAT;
-import static project.carsharing.util.PatternUtil.formatDoubleValue;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,9 +12,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.carsharing.dto.rental.RentalCreateResponseDto;
 import project.carsharing.dto.rental.RentalResponseDto;
 import project.carsharing.mapper.RentalMapper;
+import project.carsharing.model.Payment;
+import project.carsharing.model.Rental;
 import project.carsharing.repository.RentalRepository;
 import project.carsharing.repository.UserRepository;
 import project.carsharing.service.NotificationService;
@@ -32,14 +32,14 @@ public class TelegramNotificationService implements NotificationService {
     
     @Override
     @Transactional
-    public void sendMessageAboutNewRental(RentalCreateResponseDto rentalDto) {
-        String message = createMessageAboutNewRental(rentalDto);
+    public void sendMessageAboutNewRental(Long rentalId, Payment payment) {
+        Rental rental = rentalRepository.getReferenceById(rentalId);
+        String message = createMessageAboutNewRental(rental, payment);
         sendMessageToAllManagers(message);
-        log.debug("All managers have been notified by telegram bot"
-                          + " about creation of a new rental with id {}", rentalDto.getId());
+        log.info("All managers have been notified by telegram bot"
+                          + " about creation of a new rental with id {}", rental.getId());
     }
     
-    @Override
     @Scheduled(cron = "0 0 11 * * ?")
     @Transactional
     public void checkOverdueRentalsAndSendMessage() {
@@ -51,11 +51,12 @@ public class TelegramNotificationService implements NotificationService {
                               ? "Hello! No rentals overdue today!"
                               : createMessageAboutOverdueRentals(rentals);
         sendMessageToAllManagers(message);
-        log.debug("All managers have been notified by telegram bot"
+        log.info("All managers have been notified by telegram bot"
                           + " about {} overdue rentals", rentals.size());
     }
     
-    private String createMessageAboutNewRental(RentalCreateResponseDto rentalDto) {
+    private String createMessageAboutNewRental(Rental rental, Payment payment) {
+        
         String message = """
                 🆕 Here is a new rental that was created on %s by user %s %s (%s)
                 
@@ -65,14 +66,14 @@ public class TelegramNotificationService implements NotificationService {
                 💳 %s USD - paid""";
         return String.format(message,
                 LocalDateTime.now().format(DATE_TIME_FORMAT),
-                rentalDto.getUser().getFirstName(),
-                rentalDto.getUser().getLastName(),
-                rentalDto.getUser().getEmail(),
-                rentalDto.getCar().getBrand(),
-                rentalDto.getCar().getModel(),
-                rentalDto.getRentalDate().format(DATE_FORMAT),
-                rentalDto.getReturnDate().format(DATE_FORMAT),
-                rentalDto.getTotalAmount());
+                rental.getUser().getFirstName(),
+                rental.getUser().getLastName(),
+                rental.getUser().getEmail(),
+                rental.getCar().getBrand(),
+                rental.getCar().getModel(),
+                rental.getRentalDate().format(DATE_FORMAT),
+                rental.getReturnDate().format(DATE_FORMAT),
+                payment.getAmount().doubleValue());
     }
     
     private String createMessageAboutOverdueRentals(List<RentalResponseDto> rentalsBeforeDate) {
@@ -85,15 +86,11 @@ public class TelegramNotificationService implements NotificationService {
             long overdueDays = rentalsBeforeDate.get(i).getReturnDate()
                                        .until(LocalDate.now(), ChronoUnit.DAYS);
             RentalResponseDto rental = rentalsBeforeDate.get(i);
-            rental.setLeftToPay(
-                    formatDoubleValue(overdueDays * rental.getCar().getDailyFee()));
-            
             String rentMessage = """
                     
                     %s. %s - return date (%s %s overdue)
                         %s %s
                         %s %s (%s)
-                        %s USD - left to pay
                     """;
             stringBuilder.append(String.format(rentMessage,
                     i + 1,
@@ -104,8 +101,7 @@ public class TelegramNotificationService implements NotificationService {
                     rental.getCar().getModel(),
                     rental.getUser().getFirstName(),
                     rental.getUser().getLastName(),
-                    rental.getUser().getEmail(),
-                    rental.getLeftToPay()));
+                    rental.getUser().getEmail()));
         }
         return stringBuilder.toString();
     }

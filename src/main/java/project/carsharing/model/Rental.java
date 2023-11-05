@@ -2,6 +2,8 @@ package project.carsharing.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -42,6 +44,16 @@ public class Rental {
     private LocalDate returnDate;
     @Column(name = "actual_return_date")
     private LocalDate actualReturnDate;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Status status;
     @Column(nullable = false, name = "is_deleted")
     private boolean isDeleted = false;
+    
+    public enum Status {
+        PAID,
+        CREATED,
+        CANCELLED,
+        RETURNED,
+    }
 }

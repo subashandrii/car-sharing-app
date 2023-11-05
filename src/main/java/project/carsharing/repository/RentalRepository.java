@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import project.carsharing.model.Rental;
+import project.carsharing.model.User;
 
 public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Rental> findAllByActualReturnDateIsNull(Pageable pageable);
@@ -23,4 +24,8 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
                    + "WHERE r.returnDate < ?1 AND r.actualReturnDate IS NULL "
                    + "ORDER BY r.returnDate DESC")
     List<Rental> findAllByReturnDateBefore(LocalDate currentDate);
+    
+    List<Rental> getRentalsByStatus(Rental.Status status);
+    
+    List<Rental> getRentalsByUserAndStatusIn(User user, List<Rental.Status> status);
 }
